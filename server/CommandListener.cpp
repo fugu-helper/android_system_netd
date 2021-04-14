@@ -225,6 +225,12 @@ int CommandListener::InterfaceCmd::runCommand(SocketClient *cli,
                     ifc_close();
                     return 0;
                 }
+       // ifc utils is not thread safe. ifc_close may be called by some other
+       // thread at anytime. For safety reason, check if it has been init.
+       // If it is not, re-init it.
+           ifc_init();
+
+
                 if (addr.s_addr != 0) {
                     if (ifc_add_address(argv[2], argv[3], atoi(argv[4]))) {
                         cli->sendMsg(ResponseCode::OperationFailed, "Failed to set address", true);
@@ -236,6 +242,11 @@ int CommandListener::InterfaceCmd::runCommand(SocketClient *cli,
 
             /* Process flags */
             for (int i = index; i < argc; i++) {
+       // ifc utils is not thread safe. ifc_close may be called by some other
+       // thread at anytime. For safety reason, check if it has been init.
+       // If it is not, re-init it.
+           ifc_init();
+
                 char *flag = argv[i];
                 if (!strcmp(flag, "up")) {
                     ALOGD("Trying to bring up %s", argv[2]);
